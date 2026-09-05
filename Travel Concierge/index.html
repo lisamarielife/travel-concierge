@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your personal travel concierge</title>
+<link rel="stylesheet" href="auth.css">
+<script src="auth.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white: #FFFFFF;
+  --pearl: #FCFCFA;
+  --navy: #263B4E;
+  --blue: #2B5E8A;
+  --blue-light: #EBF2F8;
+  --gold: #C89D70;
+  --border: #D1D9E0;
+  --border-light: #EDF1F4;
+  --muted: #7A8FA0;
+  --tint: #F4F7F9;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { font-family: 'Jost', sans-serif; background: var(--pearl); color: var(--navy); min-height: 100vh; -webkit-font-smoothing: antialiased; font-weight: 400; font-size: 16px; }
+
+/* ── Progress ── */
+.progress-wrap {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: var(--white); border-bottom: 1px solid var(--border-light);
+  padding: 0 40px; height: 64px; display: none; align-items: center; gap: 20px;
+  box-shadow: 0 2px 12px rgba(38,59,78,0.06);
+}
+.progress-wrap.on { display: flex; }
+.progress-label { font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 300; color: var(--muted); white-space: nowrap; letter-spacing: 0.3px; }
+.progress-track { flex: 1; height: 5px; background: rgba(200,157,112,0.2); border-radius: 5px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--gold); border-radius: 5px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+.progress-count { font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 400; color: var(--gold); white-space: nowrap; }
+
+/* ── Welcome ── */
+.welcome {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 24px; text-align: center; background: var(--white);
+}
+.welcome-rule {
+  width: min(480px, 85vw); height: 3px;
+  background: linear-gradient(to right, transparent, var(--gold) 12%, var(--gold) 88%, transparent);
+  margin: 0 auto 40px; border: none; border-radius: 2px;
+}
+.welcome-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(34px, 5.5vw, 58px);
+  font-weight: 400;
+  color: var(--navy); line-height: 1.18; margin-bottom: 28px; letter-spacing: -0.3px;
+}
+.welcome-body {
+  font-family: 'Jost', sans-serif;
+  font-size: 15px; font-weight: 300; color: var(--muted);
+  max-width: 460px; line-height: 1.85; margin-bottom: 48px;
+}
+.btn-begin {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 44px; background: var(--blue); color: var(--white);
+  border: none; font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 400;
+  cursor: pointer; transition: background 0.3s; letter-spacing: 0.3px;
+ -webkit-appearance: none; }
+.btn-begin:hover { background: var(--navy); }
+.btn-begin .arr { transition: transform 0.3s; display: inline-block; }
+.btn-begin:hover .arr { transform: translateX(4px); }
+
+/* ── Steps ── */
+.step { display: none; min-height: 100vh; padding: 100px 24px 80px; }
+.step.on { display: flex; flex-direction: column; align-items: center; animation: fadeUp 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.inner { width: 100%; max-width: 680px; }
+
+.step-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(26px, 4vw, 38px); font-weight: 400;
+  color: var(--navy); line-height: 1.2; margin-bottom: 10px; letter-spacing: -0.2px;
+}
+.step-sub {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px; font-weight: 400; color: var(--muted); line-height: 1.75; margin-bottom: 36px;
+}
+
+/* ── Fields ── */
+.fw { margin-bottom: 26px; }
+.lbl { font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 400; color: var(--navy); margin-bottom: 10px; display: block; letter-spacing: 0.2px; }
+.opt { color: var(--muted); font-weight: 300; margin-left: 6px; font-size: 11px; }
+
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
+  width: 100%; padding: 13px 16px; border: 1px solid var(--border); background: var(--white);
+  font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 300; color: var(--navy);
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s; border-radius: 0; appearance: none;
+  min-height: 44px; box-sizing: border-box;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(43,94,138,0.06); }
+input::placeholder, textarea::placeholder { color: var(--muted); font-weight: 300; }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C89D70' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center; padding-right: 42px; cursor: pointer;
+  border-color: var(--border); letter-spacing: 0.2px;
+}
+select:hover { border-color: var(--gold); }
+select option { font-family: 'Jost', sans-serif; font-weight: 300; color: var(--navy); background: var(--white); padding: 8px; }
+textarea { resize: vertical; min-height: 88px; line-height: 1.65; }
+
+/* ── Tiles ── */
+.tg { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.tg2 { grid-template-columns: repeat(2, 1fr); }
+.tg3 { grid-template-columns: repeat(3, 1fr); }
+
+.tile {
+  padding: 15px 14px; border: 1px solid var(--border); background: var(--white);
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 400; color: var(--navy);
+  line-height: 1.4; user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; position: relative;
+  min-height: 44px; box-sizing: border-box;
+}
+.tile:hover { border-color: var(--gold); }
+.tile.on { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+.tile.on::after { content: ''; position: absolute; top: 7px; right: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--blue); }
+.tsub { font-size: 11px; color: var(--muted); font-weight: 300; margin-top: 3px; }
+.tile.on .tsub { color: var(--blue); opacity: 0.75; }
+
+/* ── Dividers ── */
+.div { height: 1px; background: var(--border-light); margin: 24px 0; }
+.slbl { font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 400; color: var(--navy); margin-bottom: 10px; display: block; letter-spacing: 0.2px; }
+
+/* ── Navigation ── */
+.nav { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border-light); }
+.btn-back { font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 300; color: var(--muted); background: none; border: none; cursor: pointer; transition: color 0.2s;  -webkit-appearance: none; }
+.btn-back:hover { color: var(--navy); }
+.btn-next { font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 400; color: var(--white); background: var(--gold); border: none; cursor: pointer; padding: 14px 34px; transition: background 0.2s; display: inline-flex; align-items: center; gap: 10px; letter-spacing: 0.2px; -webkit-appearance: none; }
+.btn-next:hover { background: var(--navy); }
+.btn-next .arr { transition: transform 0.2s; display: inline-block; }
+.btn-next:hover .arr { transform: translateX(3px); }
+
+/* ── Budget ── */
+.budget-amt { font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+.budget-pp { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--muted); font-weight: 300; margin-bottom: 18px; min-height: 18px; }
+input[type="range"] { width: 100%; height: 4px; border-radius: 4px; background: var(--border); outline: none; cursor: pointer; margin: 14px 0; padding: 0; border: none; appearance: none; }
+input[type="range"]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--white); border: 2px solid var(--blue); cursor: pointer; box-shadow: 0 2px 8px rgba(48,107,150,0.2); transition: transform 0.2s; }
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--white); border: 2px solid var(--blue); cursor: pointer; box-shadow: 0 2px 8px rgba(48,107,150,0.2); }
+input[type="range"]::-moz-range-track { height: 4px; background: var(--border); border-radius: 4px; border: none; }
+.budget-lbls { display: flex; justify-content: space-between; font-family: 'Jost', sans-serif; font-size: 11px; color: var(--muted); font-weight: 300; }
+
+/* ── Kids ── */
+.kid-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.kid-row label { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--muted); white-space: nowrap; min-width: 54px; font-weight: 300; }
+.kid-row input { flex: 1; }
+.btn-rm-kid { width: 28px; height: 28px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+.btn-rm-kid:hover { border-color: #c0392b; color: #c0392b; }
+.btn-add-kid { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--blue); background: none; border: 1px solid var(--border); padding: 9px 16px; cursor: pointer; transition: border-color 0.2s; margin-top: 6px; font-weight: 400; }
+.btn-add-kid:hover { border-color: var(--blue); }
+
+/* ── Duration ── */
+.dur-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.dur-row input[type="number"] { max-width: 90px; flex-shrink: 0; }
+.dur-row select { max-width: 130px; flex-shrink: 0; }
+.dur-or { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--muted); font-weight: 300; padding: 0 2px; white-space: nowrap; }
+
+/* ── Rank ── */
+.rank-note { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--muted); font-weight: 300; margin-bottom: 10px; }
+.rank-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid var(--border); background: var(--white); margin-bottom: 6px; cursor: pointer; transition: all 0.2s; font-family: 'Jost', sans-serif; font-size: 13px; color: var(--navy); font-weight: 400; }
+.rank-item:hover { border-color: var(--gold); }
+.rank-item.on { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+.rank-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 400; flex-shrink: 0; transition: all 0.2s; font-family: 'Jost', sans-serif; }
+.rank-item.on .rank-dot { background: var(--blue); border-color: var(--blue); color: var(--white); }
+
+/* ── Modals ── */
+.modal-wrap { display: none; position: fixed; inset: 0; background: rgba(38,59,78,0.45); z-index: 200; align-items: center; justify-content: center; padding: 24px; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.modal-wrap.on { display: flex; }
+.modal { background: var(--white); padding: 40px; max-width: 420px; width: 100%; animation: fadeUp 0.3s ease both; }
+.modal-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; color: var(--navy); margin-bottom: 8px; }
+.modal-sub { font-family: 'Jost', sans-serif; font-size: 13px; color: var(--muted); font-weight: 300; margin-bottom: 20px; line-height: 1.65; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.btn-mc { font-family: 'Jost', sans-serif; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border); padding: 10px 18px; cursor: pointer; transition: all 0.2s; font-weight: 300; }
+.btn-mc:hover { color: var(--navy); border-color: var(--navy); }
+.btn-mok { font-family: 'Jost', sans-serif; font-size: 13px; color: var(--white); background: var(--blue); border: none; padding: 10px 22px; cursor: pointer; transition: background 0.2s; font-weight: 400; }
+.btn-mok:hover { background: var(--navy); }
+
+/* ── Inline note ── */
+.inline-note { background: var(--blue-light); border-left: 2px solid var(--blue); padding: 12px 14px; font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 300; color: var(--navy); margin-top: 8px; line-height: 1.65; }
+
+/* ── Loading ── */
+.loading { display: none; min-height: 100vh; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 60px 24px; background: var(--white); }
+.loading.on { display: flex; }
+.loading-rule {
+  width: min(480px, 85vw); height: 3px;
+  background: linear-gradient(to right, transparent, var(--gold) 12%, var(--gold) 88%, transparent);
+  margin: 0 auto 36px; border: none; border-radius: 2px;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+.loading-title { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 400; color: var(--navy); margin-bottom: 10px; }
+.loading-sub { font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 300; color: var(--muted); }
+
+/* ── Output ── */
+.output { display: none; padding: 80px 24px; min-height: 100vh; }
+.output.on { display: block; }
+.out-inner { max-width: 760px; margin: 0 auto; }
+.out-header { text-align: center; margin-bottom: 48px; padding-bottom: 40px; border-bottom: 1px solid var(--border-light); }
+.out-rule {
+  width: min(480px, 85vw); height: 3px;
+  background: linear-gradient(to right, transparent, var(--gold) 12%, var(--gold) 88%, transparent);
+  margin: 0 auto 32px; border: none; border-radius: 2px;
+}
+.out-title { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 400; color: var(--navy); margin-bottom: 12px; }
+.out-sub { font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 300; color: var(--muted); line-height: 1.75; max-width: 500px; margin: 0 auto 32px; }
+.btn-copy-all { display: inline-flex; align-items: center; gap: 10px; padding: 15px 34px; background: var(--gold); color: var(--white); border: none; font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 400; cursor: pointer; transition: background 0.2s; letter-spacing: 0.2px;  -webkit-appearance: none; }
+.btn-copy-all:hover { background: var(--navy); }
+
+/* ── Prompt cards ── */
+.pcard { margin-bottom: 14px; border: 1px solid var(--border); background: var(--tint); animation: fadeUp 0.4s ease both; }
+.pcard-head { display: flex; justify-content: space-between; align-items: center; padding: 13px 18px; background: var(--white); border-bottom: 1px solid var(--border-light); gap: 12px; }
+.pcard-num { font-family: 'Jost', sans-serif; font-size: 11px; color: var(--muted); font-weight: 300; margin-bottom: 2px; }
+.pcard-title { font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 400; color: var(--navy); }
+.btn-copy1 { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; cursor: pointer; transition: all 0.25s; white-space: nowrap; font-weight: 400; flex-shrink: 0; }
+.btn-copy1:hover { border-color: var(--blue); color: var(--blue); }
+.btn-copy1.copied { background: var(--gold); border-color: var(--gold); color: var(--white); }
+.pcard-body { padding: 20px 18px; font-family: 'Jost', sans-serif; font-size: 14.5px; font-weight: 300; line-height: 1.85; color: var(--navy); white-space: pre-wrap; }
+.out-foot { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--border-light); text-align: center; }
+.btn-restart { font-family: 'Jost', sans-serif; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border); padding: 12px 24px; cursor: pointer; transition: all 0.2s; font-weight: 300; }
+.btn-restart:hover { border-color: var(--navy); color: var(--navy); }
+.out-instructions { text-align: left; max-width: 460px; margin: 0 auto 28px; font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 300; color: var(--muted); line-height: 1.8; padding-left: 20px; }
+.out-instructions li { margin-bottom: 6px; }
+.out-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-save { display: inline-flex; align-items: center; gap: 10px; padding: 15px 30px; background: none; color: var(--navy); border: 1px solid var(--border); font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 400; cursor: pointer; transition: all 0.2s; letter-spacing: 0.2px; }
+.btn-save:hover { border-color: var(--navy); }
+
+@media (max-width: 580px) {
+  .tg { grid-template-columns: repeat(2, 1fr); }
+  .tg3 { grid-template-columns: repeat(2, 1fr); }
+  .progress-wrap { padding: 0 20px; gap: 14px; }
+  .modal { padding: 28px 20px; }
+}
+
+@media (min-width: 768px) {
+  /* Base body */
+  html, body { font-size: 18px; }
+
+  /* Headings */
+  .welcome-title { font-size: 62px; line-height: 1.12; }
+  .step-title { font-size: 42px; line-height: 1.15; }
+  .out-title { font-size: 46px; }
+  .modal-title { font-size: 30px; }
+
+  /* Body copy */
+  .welcome-body { font-size: 18px; line-height: 1.9; max-width: 520px; }
+  .step-sub { font-size: 17px; line-height: 1.8; margin-bottom: 40px; }
+  .pcard-body { font-size: 16.5px; line-height: 1.95; white-space: pre-wrap; }
+  .pcard-title { font-size: 18px; }
+  .pcard-num { font-size: 13px; }
+  .modal-sub { font-size: 15px; }
+
+  /* Inputs & selects — comfortable legibility */
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    font-size: 16px;
+    padding: 14px 18px;
+  }
+  textarea { font-size: 15.5px; }
+
+  /* Tiles — larger touch targets on desktop too */
+  .tile { font-size: 15px; padding: 17px 16px; }
+  .tsub { font-size: 13px; }
+
+  /* Rank items */
+  .rank-item { font-size: 15px; padding: 14px 18px; }
+  .rank-dot { width: 26px; height: 26px; font-size: 12px; }
+
+  /* Buttons — prominent and easy to click */
+  .btn-begin { font-size: 17px; padding: 20px 56px; }
+  .btn-next { font-size: 16px; padding: 16px 42px; }
+  .btn-back { font-size: 15px; }
+  .btn-copy-all { font-size: 15px; padding: 17px 42px; }
+  .btn-save { font-size: 15px; padding: 17px 34px; }
+  .btn-restart { font-size: 15px; padding: 14px 28px; }
+  .btn-copy1 { font-size: 13px; padding: 8px 18px; }
+  .btn-mok { font-size: 14px; padding: 12px 26px; }
+  .btn-mc { font-size: 14px; padding: 12px 20px; }
+  .btn-add-kid { font-size: 13px; padding: 11px 18px; }
+
+  /* Labels & misc */
+  .slbl { font-size: 14px; margin-bottom: 12px; }
+  .lbl { font-size: 14px; margin-bottom: 12px; }
+  .opt { font-size: 13px; }
+  .out-sub { font-size: 16px; }
+  .out-instructions li { font-size: 15px; line-height: 1.75; }
+  .progress-label { font-size: 13px; }
+  .progress-count { font-size: 13px; }
+  .budget-amt { font-size: 17px; }
+  .budget-pp { font-size: 14px; }
+  .budget-lbls span { font-size: 13px; }
+  .inline-note { font-size: 14px; }
+  .rank-note { font-size: 13px; }
+  .dur-or { font-size: 14px; }
+
+  /* Card header padding */
+  .pcard-head { padding: 16px 22px; }
+  .pcard-body { padding: 24px 22px; }
+
+  /* Step padding for desktop breathing room */
+  .step { padding: 110px 40px 90px; }
+  .inner { max-width: 720px; }
+  .out-inner { max-width: 800px; }
+}
+
+@media print {
+  .progress-wrap, .out-actions, .out-foot, .btn-copy1, .modal-wrap,
+  .btn-restart, .out-instructions { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .output { display: block !important; padding: 0 !important; }
+  .out-inner { max-width: 100% !important; }
+  .pcard { page-break-inside: avoid; border: 1px solid #ccc !important; margin-bottom: 20px !important; }
+  .pcard-body { font-size: 12px !important; line-height: 1.6 !important; color: #000 !important; }
+  .pcard-head { background: #f5f5f5 !important; }
+  .out-header { border-bottom: 1px solid #ccc !important; }
+  .out-title { font-size: 24px !important; }
+  .out-rule { display: none !important; }
+}
+
+/* ── iOS Safari & Mobile Layout Stability ── */
+@supports (-webkit-touch-callout: none) {
+  .step, .welcome, .loading, .output {
+    min-height: -webkit-fill-available;
+  }
+}
+.modal-wrap {
+  min-height: -webkit-fill-available;
+  -webkit-overflow-scrolling: touch;
+}
+.modal {
+  -webkit-overflow-scrolling: touch;
+}
+input[type="date"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+}
+</style>
+</head>
+<body>
+
+<!-- Privacy policy modal -->
+<div class="modal-wrap" id="privacyModal">
+  <div class="modal" style="max-width:560px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;padding:0;">
+    <div style="padding:40px 40px 16px;">
+      <div class="modal-title">Privacy policy</div>
+    </div>
+    <div style="font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--navy);line-height:1.8;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:0 40px 8px;">
+      <p style="margin-bottom:14px;">Your privacy matters. This tool is designed with that in mind.</p>
+      <p style="font-weight:500;margin-bottom:6px;">What we collect</p>
+      <p style="margin-bottom:14px;">This tool does not collect, store or transmit any personal information. All answers you enter into the questionnaire exist only in your browser session and are never sent to any server, database or third party.</p>
+      <p style="font-weight:500;margin-bottom:6px;">How the tool works</p>
+      <p style="margin-bottom:14px;">Your responses are used solely to generate your personalised AI prompts within your browser. Once you close or refresh the page all information is cleared. Nothing is retained.</p>
+      <p style="font-weight:500;margin-bottom:6px;">Third party AI tools</p>
+      <p style="margin-bottom:14px;">When you paste your generated prompts into Claude, ChatGPT, Gemini or any other AI tool you are subject to that platform's own privacy policy and terms of service. We recommend reviewing those independently.</p>
+      <p style="font-weight:500;margin-bottom:6px;">Cookies</p>
+      <p style="margin-bottom:14px;">This tool does not use cookies or any tracking technology.</p>
+      <p style="font-weight:500;margin-bottom:6px;">Email collection and purchase verification</p>
+      <p style="margin-bottom:14px;">When you purchase this tool your email address is collected at the point of sale through the platform you purchased from (such as Gumroad, Etsy or Payhip). This email is stored securely and used solely to verify that you are a legitimate purchaser and to grant you access to this tool. It is not used for marketing, shared with any third party, or retained beyond what is necessary for access verification. By purchasing you consent to this use of your email address.</p>
+      <p style="font-weight:500;margin-bottom:6px;">Copyright</p>
+      <p style="margin-bottom:14px;">All content, design and prompt sequences within this tool are the intellectual property of Lisa Marie Life and are protected under copyright. You may use the generated prompts for personal use only. Reproduction, resale or redistribution of this tool or its contents in any form without written permission is strictly prohibited.</p>
+      <p style="font-weight:500;margin-bottom:6px;">Contact</p>
+      <p style="margin-bottom:14px;">If you have any questions about privacy please contact us at <a href="mailto:lisamarieaicoach@gmail.com" style="color:var(--blue);text-decoration:none;">lisamarieaicoach@gmail.com</a></p>
+      <p style="color:var(--muted);font-size:11px;">Last updated: July 2026</p>
+    </div>
+    <div class="modal-actions" style="flex-shrink:0;padding:16px 40px 24px;background:var(--white);border-top:1px solid var(--border-light);">
+      <button type="button" class="btn-mok" onclick="closePrivacyModal()">Close</button>
+    </div>
+  </div>
+</div>
+<div class="modal-wrap" id="budgetModal">
+  <div class="modal">
+    <div class="modal-title">Your precise budget</div>
+    <div class="modal-sub">Please enter your total trip budget in thousands of AUD — for example, enter 75 for $75,000.</div>
+    <input type="number" id="budgetOverflowInput" placeholder="e.g. 75" min="30" style="width:100%;">
+    <div class="modal-actions">
+      <button type="button" class="btn-mc" onclick="closeBudgetModal()">Cancel</button>
+      <button type="button" class="btn-mok" onclick="confirmBudgetOverflow()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Visa modal -->
+<div class="modal-wrap" id="visaModal">
+  <div class="modal">
+    <div class="modal-title">Your passport</div>
+    <div class="modal-sub">Which passport will you be travelling on? We will factor visa-free destinations into your recommendations.</div>
+    <input type="text" id="passportInput" placeholder="e.g. Australian, British, American">
+    <div class="modal-actions">
+      <button type="button" class="btn-mc" onclick="closeVisaModal()">Cancel</button>
+      <button type="button" class="btn-mok" onclick="confirmPassport()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Progress bar -->
+<div class="progress-wrap" id="progressWrap">
+  <span class="progress-label">Your journey</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="progress-count" id="progressCount"></span>
+</div>
+
+<!-- Welcome -->
+<div id="welcome" class="welcome">
+  <hr class="welcome-rule">
+  <h1 class="welcome-title">Welcome to your personal travel concierge</h1>
+  <p class="welcome-body">Spend a moment clicking through your preferences and I'll translate your dream trip into a suite of custom AI prompts. You will have the exact instructions needed to make AI generate a perfectly tailored, day-by-day itinerary for your next great adventure.</p>
+  <button type="button" class="btn-begin" onclick="startJourney()">Begin <span class="arr">→</span></button>
+  <div style="margin-top:100px;padding-bottom:40px;text-align:center;">
+    <p style="font-family:'Jost',sans-serif;font-size:11px;font-weight:300;color:var(--muted);letter-spacing:0.3px;margin-bottom:8px;"><a href="#" onclick="openPrivacyModal();return false;" style="color:var(--muted);text-decoration:underline;text-underline-offset:3px;">Privacy policy</a></p>
+    <p style="font-family:'Jost',sans-serif;font-size:11px;font-weight:300;color:var(--muted);letter-spacing:0.3px;">© 2026 Lisa Marie Life. All rights reserved. Unauthorised reproduction or resale of this tool is strictly prohibited.</p>
+  </div>
+</div>
+
+<!-- Step 1 -->
+<div class="step" id="step-1">
+  <div class="inner">
+    <h2 class="step-title">Where does your journey begin?</h2>
+    <p class="step-sub">Your departure city shapes flights, travel time and what is realistically within reach.</p>
+    <div class="fw">
+      <label class="lbl">Departure city and country</label>
+      <input type="text" id="departureCity" placeholder="e.g. Sydney, Australia">
+    </div>
+    <div class="nav">
+      <div></div>
+      <button type="button" class="btn-next" onclick="goTo(2)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2 -->
+<div class="step" id="step-2">
+  <div class="inner">
+    <h2 class="step-title">Who is joining you?</h2>
+    <p class="step-sub">This shapes everything from pacing to accommodation to the experiences we will recommend.</p>
+    <div class="fw">
+      <span class="slbl">Travelling as</span>
+      <div class="tg tg3">
+        <div class="tile" data-g="travelType" data-v="Solo" onclick="selTile(this);updateTravelType()">Solo<div class="tsub">Just me</div></div>
+        <div class="tile" data-g="travelType" data-v="Couple" onclick="selTile(this);updateTravelType()">Couple<div class="tsub">Two adults</div></div>
+        <div class="tile" data-g="travelType" data-v="Family" onclick="selTile(this);updateTravelType()">Family<div class="tsub">With children</div></div>
+        <div class="tile" data-g="travelType" data-v="Solo parent" onclick="selTile(this);updateTravelType()">Solo parent<div class="tsub">Me and kids</div></div>
+        <div class="tile" data-g="travelType" data-v="Group" onclick="selTile(this);updateTravelType()">Group<div class="tsub">Friends or extended family</div></div>
+      </div>
+    </div>
+    <div id="kidsSection" style="display:none;">
+      <div class="div"></div>
+      <div class="fw">
+        <span class="slbl">Children's ages</span>
+        <div id="kidsContainer"><div class="kid-row"><label>Child 1</label><input type="number" min="0" max="17" placeholder="Age" class="kid-age" onblur="sanitizeKidAge(this)"></div></div>
+        <button type="button" class="btn-add-kid" onclick="addKid()">+ Add child</button>
+      </div>
+    </div>
+    <div id="groupSection" style="display:none;">
+      <div class="div"></div>
+      <div class="fw">
+        <label class="lbl">Number of travellers</label>
+        <input type="number" id="groupCount" min="2" max="50" placeholder="e.g. 8" style="max-width:150px;">
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="fw">
+      <label class="lbl">Accessibility or mobility requirements <span class="opt">Optional</span></label>
+      <textarea id="mobilityNotes" placeholder="Any physical limitations or accessibility needs we should factor in..."></textarea>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(1)">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(3)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3 -->
+<div class="step" id="step-3">
+  <div class="inner">
+    <h2 class="step-title">When would you like to travel?</h2>
+    <p class="step-sub">Your timing influences destination recommendations, pricing and what experiences are available.</p>
+    <div class="fw">
+      <span class="slbl">Dates</span>
+      <div class="tg tg3" style="margin-bottom:14px;">
+        <div class="tile" data-g="dateType" data-v="specific" onclick="selTile(this);showDates('specific')">Specific dates<div class="tsub">I know exactly when</div></div>
+        <div class="tile" data-g="dateType" data-v="window" onclick="selTile(this);showDates('window')">General window<div class="tsub">A month or season</div></div>
+        <div class="tile" data-g="dateType" data-v="flexible" onclick="selTile(this);showDates('flexible')">Fully flexible<div class="tsub">Open to suggestions</div></div>
+      </div>
+      <div id="di-specific" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label class="slbl">Departure</label><input type="date" id="dateFrom"></div>
+          <div><label class="slbl">Return</label><input type="date" id="dateTo"></div>
+        </div>
+      </div>
+      <div id="di-window" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label class="slbl">From</label><input type="date" id="windowFrom"></div>
+          <div><label class="slbl">To</label><input type="date" id="windowTo"></div>
+        </div>
+      </div>
+      <div id="di-flexible" style="display:none;"></div>
+    </div>
+    <div class="fw">
+      <span class="slbl">Trip duration</span> <span id="durNote" style="display:none;font-size:11px;color:var(--muted);font-weight:300;font-family:'Jost',sans-serif;">Calculated from your selected dates</span>
+      <div class="dur-row">
+        <input type="number" id="durationNum" min="1" max="365" placeholder="e.g. 10">
+        <select id="durationUnit"><option value="nights">Nights</option><option value="weeks">Weeks</option><option value="months">Months</option></select>
+        <span class="dur-or">or</span>
+        <div class="tile" data-g="durFlex" data-v="flexible" onclick="selTile(this);toggleDurFlex()" style="padding:12px 16px;font-size:12px;white-space:nowrap;">Flexible on duration</div>
+      </div>
+    </div>
+    <div class="fw">
+      <span class="slbl">Timing preferences <span class="opt">Optional — select all that apply</span></span>
+      <div class="tg tg2" style="margin-bottom:10px;">
+        <div class="tile" data-g="timingPref" data-v="Must travel in school holidays" onclick="togTile(this)">School holidays<div class="tsub">Must align with term breaks</div></div>
+        <div class="tile" data-g="timingPref" data-v="Prefer off-peak" onclick="togTile(this)">Prefer off-peak<div class="tsub">Fewer crowds, better value</div></div>
+        <div class="tile" data-g="timingPref" data-v="Flexible for best value" onclick="togTile(this)">Flexible for best value<div class="tsub">Go when flights are cheapest</div></div>
+        <div class="tile" data-g="timingPref" data-v="Avoid specific weather" onclick="togTile(this);togField('avoidWrap')">Avoid specific weather<div class="tsub">e.g. monsoon, extreme heat</div></div>
+        <div class="tile" data-g="timingPref" data-v="Coincide with a local event" onclick="togTile(this);togField('eventWrap')">Coincide with an event<div class="tsub">Festival, season, celebration</div></div>
+      </div>
+      <div id="avoidWrap" style="display:none;margin-bottom:8px;"><input type="text" id="avoidWeather" placeholder="e.g. monsoon season in South East Asia, European summer heat..."></div>
+      <div id="eventWrap" style="display:none;"><input type="text" id="localEvent" placeholder="e.g. cherry blossom season Japan, Oktoberfest, Diwali in India..."></div>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(2)">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(4)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4 -->
+<div class="step" id="step-4">
+  <div class="inner">
+    <h2 class="step-title">What is your total budget?</h2>
+    <p class="step-sub">Your total trip budget including flights. The AI will tailor every recommendation accordingly.</p>
+    <div class="fw">
+      <div class="budget-amt" id="budgetDisplay">$5,000</div>
+      <div class="budget-pp" id="budgetPP"></div>
+      <input type="range" id="budgetSlider" min="1000" max="30000" step="500" value="5000" oninput="updateBudget(this.value)">
+      <div class="budget-lbls"><span>$1,000</span><span>$30,000+</span></div>
+      <div class="field-wrap" style="margin-top:20px;">
+        <label class="lbl">Currency</label>
+        <select id="currencySelect" style="max-width:220px;">
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="NZD">NZD — New Zealand Dollar</option>
+          <option value="SGD">SGD — Singapore Dollar</option>
+          <option value="JPY">JPY — Japanese Yen</option>
+          <option value="CAD">CAD — Canadian Dollar</option>
+          <option value="HKD">HKD — Hong Kong Dollar</option>
+          <option value="THB">THB — Thai Baht</option>
+          <option value="IDR">IDR — Indonesian Rupiah</option>
+          <option value="INR">INR — Indian Rupee</option>
+          <option value="AED">AED — UAE Dirham</option>
+          <option value="ZAR">ZAR — South African Rand</option>
+        </select>
+      </div>
+    </div>
+    <div class="fw">
+      <span class="slbl">Budget style</span>
+      <div class="tg tg2">
+        <div class="tile" data-g="budgetStyle" data-v="Value-conscious" onclick="selTile(this)">Value-conscious<div class="tsub">Smart spend, maximum experience</div></div>
+        <div class="tile" data-g="budgetStyle" data-v="Mid-range comfortable" onclick="selTile(this)">Mid-range comfortable<div class="tsub">Quality without excess</div></div>
+        <div class="tile" data-g="budgetStyle" data-v="Premium" onclick="selTile(this)">Premium<div class="tsub">Elevated in all the right places</div></div>
+        <div class="tile" data-g="budgetStyle" data-v="Ultra-luxury" onclick="selTile(this)">Ultra-luxury<div class="tsub">Only the finest will do</div></div>
+      </div>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(3)">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(5)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 5 -->
+<div class="step" id="step-5">
+  <div class="inner">
+    <h2 class="step-title">Do you have somewhere in mind?</h2>
+    <p class="step-sub">If you have a destination ready, we will move straight to planning. If not, the AI will help you discover the perfect match.</p>
+    <div class="fw">
+      <div class="tg tg2">
+        <div class="tile" data-g="destChoice" data-v="have_one" onclick="selTile(this);showDestInput(true)">I have one in mind<div class="tsub">Ready to plan</div></div>
+        <div class="tile" data-g="destChoice" data-v="help_me" onclick="selTile(this);showDestInput(false)">Help me choose<div class="tsub">I am open to ideas</div></div>
+      </div>
+    </div>
+    <div id="destInputWrap" style="display:none;margin-top:8px;">
+      <input type="text" id="destInput" placeholder="e.g. Amalfi Coast, Italy">
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(4)">← Back</button>
+      <button type="button" class="btn-next" onclick="goToAfterDest()">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 6 -->
+<div class="step" id="step-6">
+  <div class="inner">
+    <h2 class="step-title">How far are you willing to go?</h2>
+    <p class="step-sub">Select all the regions that appeal. Choosing domestic or anywhere will lock the other options.</p>
+    <div class="fw">
+      <div class="tg">
+        <div class="tile" data-region="Domestic / Local" onclick="togRegion(this)">Domestic / Local</div>
+        <div class="tile" data-region="Western Europe" onclick="togRegion(this)">Western Europe<div class="tsub">France, UK, Germany</div></div>
+        <div class="tile" data-region="Southern Europe / Mediterranean" onclick="togRegion(this)">Southern Europe<div class="tsub">Italy, Greece, Spain</div></div>
+        <div class="tile" data-region="Northern Europe / Scandinavia" onclick="togRegion(this)">Scandinavia<div class="tsub">Norway, Sweden, Denmark</div></div>
+        <div class="tile" data-region="Eastern Europe" onclick="togRegion(this)">Eastern Europe<div class="tsub">Czech Republic, Croatia</div></div>
+        <div class="tile" data-region="Asia" onclick="togRegion(this)">Asia</div>
+        <div class="tile" data-region="Pacific" onclick="togRegion(this)">Pacific</div>
+        <div class="tile" data-region="North America" onclick="togRegion(this)">North America</div>
+        <div class="tile" data-region="Central America" onclick="togRegion(this)">Central America</div>
+        <div class="tile" data-region="South America" onclick="togRegion(this)">South America</div>
+        <div class="tile" data-region="Africa" onclick="togRegion(this)">Africa</div>
+        <div class="tile" data-region="Middle East" onclick="togRegion(this)">Middle East</div>
+        <div class="tile" data-region="visa_free" onclick="togRegion(this)">Keep it visa-free<div class="tsub">Passport-friendly destinations only</div></div>
+        <div class="tile" data-region="Anywhere" onclick="togRegion(this)">Anywhere — surprise me</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(5)">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(7)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 7 -->
+<div class="step" id="step-7">
+  <div class="inner">
+    <h2 class="step-title">What kind of holiday?</h2>
+    <p class="step-sub">Select everything that resonates. There are no wrong answers.</p>
+    <div class="fw">
+      <div class="tg">
+        <div class="tile" data-g="holidayType" data-v="Beach and coastal" onclick="togTile(this)">Beach and coastal</div>
+        <div class="tile" data-g="holidayType" data-v="City and urban" onclick="togTile(this)">City and urban</div>
+        <div class="tile" data-g="holidayType" data-v="Mountains and hiking" onclick="togTile(this)">Mountains and hiking</div>
+        <div class="tile" data-g="holidayType" data-v="Snow and ski" onclick="togTile(this)">Snow and ski</div>
+        <div class="tile" data-g="holidayType" data-v="Nature and wildlife" onclick="togTile(this)">Nature and wildlife</div>
+        <div class="tile" data-g="holidayType" data-v="Culture and history" onclick="togTile(this)">Culture and history</div>
+        <div class="tile" data-g="holidayType" data-v="Food, wine and culinary experiences" onclick="togTile(this)">Food, wine and culinary experiences</div>
+        <div class="tile" data-g="holidayType" data-v="Shopping" onclick="togTile(this)">Shopping</div>
+        <div class="tile" data-g="holidayType" data-v="Theme parks and family fun" onclick="togTile(this)">Theme parks and family fun</div>
+        <div class="tile" data-g="holidayType" data-v="Adrenaline and adventure" onclick="togTile(this)">Adrenaline and adventure</div>
+        <div class="tile" data-g="holidayType" data-v="Wellness and retreat" onclick="togTile(this)">Wellness and retreat</div>
+        <div class="tile" data-g="holidayType" data-v="Concerts and live music" onclick="togTile(this)">Concerts and live music</div>
+        <div class="tile" data-g="holidayType" data-v="Sports (playing or watching)" onclick="togTile(this)">Sports (playing or watching)</div>
+        <div class="tile" data-g="holidayType" data-v="Festivals and events" onclick="togTile(this)">Festivals and events</div>
+        <div class="tile" data-g="holidayType" data-v="Road trip" onclick="togTile(this)">Road trip</div>
+        <div class="tile" data-g="holidayType" data-v="Cruising, sailing and yachting" onclick="togTile(this)">Cruising, sailing and yachting</div>
+        <div class="tile" data-g="holidayType" data-v="Warm and tropical" onclick="togTile(this)">Warm and tropical</div>
+        <div class="tile" data-g="holidayType" data-v="Cold and cosy" onclick="togTile(this)">Cold and cosy</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goBackFromType()">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(8)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 8 -->
+<div class="step" id="step-8">
+  <div class="inner">
+    <h2 class="step-title">How do you want to feel?</h2>
+    <p class="step-sub">Your pace and base preference shapes every day of your itinerary.</p>
+    <div class="fw">
+      <span class="slbl">Pace</span>
+      <div class="tg tg2">
+        <div class="tile" data-g="pace" data-v="Slow and dreamy (no agenda)" onclick="selTile(this)">Slow and dreamy<div class="tsub">No agenda, sleep in, wander</div></div>
+        <div class="tile" data-g="pace" data-v="Relaxed (plenty of downtime)" onclick="selTile(this)">Relaxed<div class="tsub">A couple of highlights, plenty of downtime</div></div>
+        <div class="tile" data-g="pace" data-v="Balanced (mix of busy and rest)" onclick="selTile(this)">Balanced<div class="tsub">Mix of busy days and restful ones</div></div>
+        <div class="tile" data-g="pace" data-v="Action-packed (maximise every minute)" onclick="selTile(this)">Action-packed<div class="tsub">Maximise every minute</div></div>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="fw">
+      <span class="slbl">Base</span>
+      <div class="tg tg2">
+        <div class="tile" data-g="base" data-v="Unpack once (stay in one location)" onclick="selTile(this)">Unpack once<div class="tsub">One base, everything from there</div></div>
+        <div class="tile" data-g="base" data-v="Keep moving (multi-stop itinerary)" onclick="selTile(this)">Keep moving<div class="tsub">Multi-stop, see more</div></div>
+      </div>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(7)">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(9)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 9 -->
+<div class="step" id="step-9">
+  <div class="inner">
+    <h2 class="step-title">How would you like to travel?</h2>
+    <p class="step-sub">Select your flight preference first (one only), then select any additional transport modes that apply.</p>
+    <div class="fw">
+      <span class="slbl">Flight preference <span class="opt">Select one</span></span>
+      <div class="tg tg3" style="margin-bottom:16px;">
+        <div class="tile" data-g="flightOpt" data-v="Flights to destination only" onclick="selFlightOpt(this)">Flights to destination only<div class="tsub">Fly to get there, then other transport</div></div>
+        <div class="tile" data-g="flightOpt" data-v="Flights throughout" onclick="selFlightOpt(this)">Flights throughout<div class="tsub">Fly to destination and around it</div></div>
+        <div class="tile" data-g="flightOpt" data-v="Strictly no flights" onclick="selFlightOpt(this)">Strictly no flights<div class="tsub">Land and sea travel only</div></div>
+      </div>
+      <span class="slbl">Other transport <span class="opt">Select all that apply</span></span>
+      <div class="tg tg2">
+        <div class="tile" data-g="transport" data-v="Train" onclick="togTile(this)">Train</div>
+        <div class="tile" data-g="transport" data-v="Cruise" onclick="togTile(this)">Cruise</div>
+        <div class="tile" data-g="transport" data-v="Road trip / self-drive" onclick="togTile(this)">Road trip / self-drive</div>
+        <div class="tile" data-g="transport" data-v="Coach / bus" onclick="togTile(this)">Coach / bus</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(8)">← Back</button>
+      <button type="button" class="btn-next" onclick="goToAfterTransport()">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 10 -->
+<div class="step" id="step-10">
+  <div class="inner">
+    <h2 class="step-title">How do you like to fly?</h2>
+    <p class="step-sub">Tell us your preferences and we will build them into your flight strategy.</p>
+    <div class="fw">
+      <span class="slbl">Flight style</span>
+      <div class="tg tg3">
+        <div class="tile" data-g="flightStyle" data-v="Red-eye" onclick="selTile(this)">Red-eye<div class="tsub">Overnight, arrive fresh</div></div>
+        <div class="tile" data-g="flightStyle" data-v="Daytime" onclick="selTile(this)">Daytime<div class="tsub">Travel during the day</div></div>
+        <div class="tile" data-g="flightStyle" data-v="Flexible on flight times" onclick="selTile(this)">Flexible<div class="tsub">Whatever works best</div></div>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="fw">
+      <span class="slbl">Class preference</span>
+      <div class="tg tg3">
+        <div class="tile" data-g="flightClass" data-v="Economy" onclick="selTile(this)">Economy</div>
+        <div class="tile" data-g="flightClass" data-v="Premium economy" onclick="selTile(this)">Premium economy</div>
+        <div class="tile" data-g="flightClass" data-v="Business class" onclick="selTile(this)">Business class</div>
+        <div class="tile" data-g="flightClass" data-v="First class" onclick="selTile(this)">First class</div>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="fw">
+      <span class="slbl">Stopovers</span>
+      <div class="tg tg3">
+        <div class="tile" data-g="stopovers" data-v="Direct only" onclick="selTile(this)">Direct only</div>
+        <div class="tile" data-g="stopovers" data-v="One stop is fine" onclick="selTile(this)">One stop is fine</div>
+        <div class="tile" data-g="stopovers" data-v="Open to long layovers if cheaper or interesting" onclick="selTile(this)">Open to long layovers<div class="tsub">If cheaper or interesting</div></div>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="fw">
+      <label class="lbl">Loyalty programs to utilise <span class="opt">Optional</span></label>
+      <input type="text" id="loyaltyPrograms" placeholder="e.g. Qantas Frequent Flyer, Velocity, KrisFlyer...">
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(9)">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(11)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 11 -->
+<div class="step" id="step-11">
+  <div class="inner">
+    <h2 class="step-title">What is your touring style?</h2>
+    <p class="step-sub">This shapes how your itinerary is structured and what kind of experiences we recommend.</p>
+    <div class="fw">
+      <div class="tg tg3">
+        <div class="tile" data-g="touring" data-v="Private guides" onclick="selTile(this)">Private guides<div class="tsub">Bespoke, personal</div></div>
+        <div class="tile" data-g="touring" data-v="Small group tours" onclick="selTile(this)">Small group tours<div class="tsub">Curated, social</div></div>
+        <div class="tile" data-g="touring" data-v="Large group tours" onclick="selTile(this)">Coach / large group tour<div class="tsub">Guided, larger group</div></div>
+        <div class="tile" data-g="touring" data-v="Completely self-guided / independent" onclick="selTile(this)">Self-guided<div class="tsub">Independent, on your terms</div></div>
+      </div>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goBackFromTouring()">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(12)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 12 -->
+<div class="step" id="step-12">
+  <div class="inner">
+    <h2 class="step-title">Your accommodation preferences</h2>
+    <p class="step-sub">Select your preferred styles and rank what matters most to you.</p>
+    <div class="fw">
+      <span class="slbl">Accommodation style <span class="opt">Select all that apply</span></span>
+      <div class="tg">
+        <div class="tile" data-g="accomStyle" data-v="Quality mid-range hotel" onclick="togTile(this)">Quality mid-range hotel</div>
+        <div class="tile" data-g="accomStyle" data-v="5-star hotel / luxury resort" onclick="togTile(this)">5-star hotel / luxury resort</div>
+        <div class="tile" data-g="accomStyle" data-v="Private villa / luxury rental" onclick="togTile(this)">Private villa / luxury rental</div>
+        <div class="tile" data-g="accomStyle" data-v="Airbnb / apartment" onclick="togTile(this)">Airbnb / apartment</div>
+        <div class="tile" data-g="accomStyle" data-v="Glamping" onclick="togTile(this)">Glamping</div>
+        <div class="tile" data-g="accomStyle" data-v="Cruise ship" onclick="togTile(this)">Cruise ship</div>
+        <div class="tile" data-g="accomStyle" data-v="Unique stays (castles, treehouses, etc)" onclick="togTile(this)">Unique stays<div class="tsub">Castles, treehouses and more</div></div>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="fw">
+      <span class="slbl">Top three priorities <span class="opt">Tap to rank in order</span></span>
+      <div class="rank-note">Select up to three in order of preference. Tap again to deselect.</div>
+      <div id="rankContainer">
+        <div class="rank-item" data-rv="Top rated" onclick="togRank(this)"><div class="rank-dot"></div>Top rated</div>
+        <div class="rank-item" data-rv="Best value" onclick="togRank(this)"><div class="rank-dot"></div>Best value</div>
+        <div class="rank-item" data-rv="Luxury and amenities" onclick="togRank(this)"><div class="rank-dot"></div>Luxury and amenities</div>
+        <div class="rank-item" data-rv="Central location" onclick="togRank(this)"><div class="rank-dot"></div>Central location</div>
+        <div class="rank-item" data-rv="Seclusion and privacy" onclick="togRank(this)"><div class="rank-dot"></div>Seclusion and privacy</div>
+        <div class="rank-item" data-rv="Best views" onclick="togRank(this)"><div class="rank-dot"></div>Best views</div>
+        <div class="rank-item" data-rv="Family-friendly" onclick="togRank(this)"><div class="rank-dot"></div>Family-friendly</div>
+        <div class="rank-item" data-rv="On-site dining" onclick="togRank(this)"><div class="rank-dot"></div>On-site dining</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(11)">← Back</button>
+      <button type="button" class="btn-next" onclick="goTo(13)">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 13 -->
+<div class="step" id="step-13">
+  <div class="inner">
+    <h2 class="step-title">Anything that makes this trip uniquely yours?</h2>
+    <p class="step-sub">All optional — but the more you share, the more personal your prompts will be.</p>
+    <div class="fw">
+      <label class="lbl">Holidays you have loved <span class="opt">Optional</span></label>
+      <textarea id="lovedHolidays" placeholder="e.g. Tokyo for the energy and food, Amalfi for the beauty, Bali for the pace and warmth..."></textarea>
+    </div>
+    <div class="fw">
+      <label class="lbl">Holidays that did not work <span class="opt">Optional</span></label>
+      <textarea id="missedHolidays" placeholder="e.g. too touristy, too hot, too much time on buses, all-inclusive felt restrictive..."></textarea>
+    </div>
+    <div class="fw">
+      <label class="lbl">Anything else <span class="opt">Optional</span></label>
+      <textarea id="anythingElse" placeholder="Anything that makes this trip uniquely yours — a special occasion, a bucket-list moment, or something you simply won't compromise on..."></textarea>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn-back" onclick="goTo(12)">← Back</button>
+      <button type="button" class="btn-next" onclick="generatePrompts()">Generate my prompts <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loadingScreen">
+  <div class="loading-rule"></div>
+  <div class="loading-title">Designing your next great adventure...</div>
+  <div class="loading-sub">Please wait a moment while we translate your preferences into your master AI prompts.</div>
+</div>
+
+<!-- Output -->
+<div class="output" id="outputScreen">
+  <div class="out-inner">
+    <div class="out-header">
+      <div class="out-rule"></div>
+      <div class="out-title">Your master prompts are ready</div>
+      <p class="out-sub" style="margin-bottom:16px;">Here is how to use them:</p>
+      <ol class="out-instructions">
+        <li>Open your AI tool, such as Claude, Gemini or ChatGPT and start a new conversation.</li>
+        <li>Paste Prompt 1 in first — this gives the AI everything it needs to know about you and your trip.</li>
+        <li>Continue pasting each prompt in order within the same conversation. Do not start a new chat between prompts as the AI needs to remember what you have shared.</li>
+        <li>Where you see bold text in [square brackets], replace it with your own input before hitting send.</li>
+      </ol>
+      <div class="out-actions">
+        <button type="button" class="btn-copy-all" onclick="copyAll()">Copy all prompts</button>
+        <button type="button" class="btn-save" onclick="handlePrint()">Save or print</button>
+      </div>
+    </div>
+    <div id="promptOutput"></div>
+    <div class="out-foot" style="margin-top:40px;padding-top:28px;border-top:1px solid var(--border-light);text-align:center;"><button type="button" class="btn-restart" onclick="restartApp()">Start over</button></div>
+  </div>
+</div>
+
+<script>
+var S = { step:0, total:13, flights:false, destChoice:null, budget:5000, budgetOver:null, passport:null, ranks:[] };
+var stepHistory = [];
+
+function startJourney() {
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('progressWrap').classList.add('on');
+  goTo(1);
+}
+
+function showValidationError(fieldId, msg) {
+  var field = document.getElementById(fieldId);
+  var existing = document.getElementById('val-' + fieldId);
+  if (existing) existing.remove();
+  var err = document.createElement('p');
+  err.id = 'val-' + fieldId;
+  err.style.cssText = 'color:#c0392b;font-family:Jost,sans-serif;font-size:12px;font-weight:300;margin-top:6px;';
+  err.textContent = msg;
+  if (field && field.parentNode) field.parentNode.insertBefore(err, field.nextSibling);
+  if (field) { field.style.borderColor = '#c0392b'; field.focus(); }
+  setTimeout(function(){
+    if (err.parentNode) err.remove();
+    if (field) field.style.borderColor = '';
+  }, 3000);
+}
+function goTo(n) {
+  // Validate current step before advancing
+  if (n > S.step) {
+    if (S.step === 1) {
+      var dep = document.getElementById('departureCity').value.trim();
+      if (!dep) { showValidationError('departureCity', 'Please enter your departure city before continuing.'); return; }
+    }
+    if (S.step === 5) {
+      var choice = document.querySelector('[data-g="destChoice"].on');
+      if (choice && choice.dataset.v === 'have_one') {
+        var dest = document.getElementById('destInput').value.trim();
+        if (!dest) { showValidationError('destInput', 'Please enter your destination before continuing.'); return; }
+      }
+    }
+  }
+  if (n > S.step && S.step > 0) stepHistory.push(S.step);
+  document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('on'); });
+  var el = document.getElementById('step-' + n);
+  if (el) { el.classList.add('on'); S.step = n; updateProg(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProg() {
+  // Derive active step from DOM to stay in sync with non-linear navigation
+  var activeStep = document.querySelector('.step.on');
+  var activeN = activeStep ? parseInt(activeStep.id.replace('step-', '')) : S.step;
+  if (!isNaN(activeN)) S.step = activeN;
+  var pct = ((S.step - 1) / (S.total - 1)) * 100;
+  document.getElementById('progressFill').style.width = Math.min(pct, 100) + '%';
+  document.getElementById('progressCount').textContent = S.step + ' of ' + S.total;
+}
+
+function goToAfterDest() {
+  var c = document.querySelector('[data-g="destChoice"].on');
+  S.destChoice = c ? c.dataset.v : null;
+  goTo(S.destChoice === 'have_one' ? 7 : 6);
+}
+function goBackFromType() { goBack(); }
+function goToAfterTransport() {
+  var flightOpt = document.querySelector('[data-g="flightOpt"].on');
+  var flightVal = flightOpt ? flightOpt.dataset.v.toLowerCase() : '';
+  S.flights = (flightVal === 'flights to destination only' || flightVal === 'flights throughout');
+  goTo(S.flights ? 10 : 11);
+}
+function goBackFromTouring() { goBack(); }
+function goBack() {
+  if (stepHistory.length === 0) return;
+  var prev = stepHistory.pop();
+  document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('on'); });
+  var el = document.getElementById('step-' + prev);
+  if (el) { el.classList.add('on'); S.step = prev; updateProg(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selTile(el) {
+  var g = el.dataset.g;
+  document.querySelectorAll('[data-g="' + g + '"]').forEach(function(t){ t.classList.remove('on'); });
+  el.classList.add('on');
+}
+function togTile(el) {
+  el.classList.toggle('on');
+}
+
+function selFlightOpt(el) {
+  // Single select among flight options — clicking same one deselects it
+  var val = el.dataset.v;
+  var already = el.classList.contains('on');
+  // Deselect all flight options
+  document.querySelectorAll('[data-g="flightOpt"]').forEach(function(t){ t.classList.remove('on'); });
+  // If it wasn't already selected, select it
+  if (!already) el.classList.add('on');
+}
+
+function updateTravelType() {
+  var c = document.querySelector('[data-g="travelType"].on');
+  var v = c ? c.dataset.v : '';
+  document.getElementById('kidsSection').style.display = (v === 'Family' || v === 'Solo parent') ? 'block' : 'none';
+  document.getElementById('groupSection').style.display = v === 'Group' ? 'block' : 'none';
+}
+
+function togRegion(el) {
+  var r = el.dataset.region;
+  if (r === 'Domestic / Local') {
+    // Domestic clears everything except visa_free
+    document.querySelectorAll('[data-region]').forEach(function(t){
+      if (t.dataset.region !== 'visa_free') t.classList.remove('on');
+    });
+    el.classList.add('on');
+  } else if (r === 'Anywhere') {
+    // Anywhere clears all specific regions but keeps visa_free state
+    var visaFreeOn = document.querySelector('[data-region="visa_free"]') && document.querySelector('[data-region="visa_free"]').classList.contains('on');
+    document.querySelectorAll('[data-region]').forEach(function(t){ t.classList.remove('on'); });
+    el.classList.add('on');
+    // Restore visa_free if it was on
+    if (visaFreeOn) {
+      var vf = document.querySelector('[data-region="visa_free"]');
+      if (vf) vf.classList.add('on');
+    }
+  } else if (r === 'visa_free') {
+    // Visa-free toggles independently alongside anything
+    el.classList.toggle('on');
+    if (el.classList.contains('on')) openVisaModal();
+  } else {
+    // Regular region - remove Domestic and Anywhere, keep visa_free
+    var domEl = document.querySelector('[data-region="Domestic / Local"]');
+    var anyEl = document.querySelector('[data-region="Anywhere"]');
+    if (domEl) domEl.classList.remove('on');
+    if (anyEl) anyEl.classList.remove('on');
+    el.classList.toggle('on');
+  }
+}
+
+function showDestInput(show) { document.getElementById('destInputWrap').style.display = show ? 'block' : 'none'; }
+
+function showDates(type) {
+  ['specific','window','flexible'].forEach(function(t){ var el = document.getElementById('di-' + t); if (el) el.style.display = 'none'; });
+  var el = document.getElementById('di-' + type); if (el) el.style.display = 'block';
+  // Clear stale values in non-active date inputs
+  if (type !== 'specific') {
+    var df = document.getElementById('dateFrom'); if (df) df.value = '';
+    var dt = document.getElementById('dateTo'); if (dt) dt.value = '';
+  }
+  if (type !== 'window') {
+    var wf = document.getElementById('windowFrom'); if (wf) wf.value = '';
+    var wt = document.getElementById('windowTo'); if (wt) wt.value = '';
+  }
+  // Grey out trip duration when specific dates chosen (duration is implicit)
+  var durNum = document.getElementById('durationNum');
+  var durUnit = document.getElementById('durationUnit');
+  var durFlex = document.querySelector('[data-g="durFlex"]');
+  var durNote = document.getElementById('durNote');
+  // Grey out timing preferences when specific dates chosen
+  var timingTiles = document.querySelectorAll('[data-g="timingPref"]');
+  var avoidWrap = document.getElementById('avoidWrap');
+  var eventWrap = document.getElementById('eventWrap');
+  if (type === 'specific') {
+    if (durNum) { durNum.disabled = true; durNum.style.opacity = '0.35'; durNum.value = ''; }
+    if (durUnit) { durUnit.disabled = true; durUnit.style.opacity = '0.35'; }
+    if (durFlex) { durFlex.style.opacity = '0.35'; durFlex.style.pointerEvents = 'none'; durFlex.classList.remove('on'); }
+    if (durNote) durNote.style.display = 'block';
+    timingTiles.forEach(function(t) { t.style.opacity = '0.35'; t.style.pointerEvents = 'none'; t.classList.remove('on'); });
+    // Clear timing values so they don't appear in generated prompts
+    document.querySelectorAll('[data-g="timingPref"].on').forEach(function(t){ t.classList.remove('on'); });
+    if (avoidWrap) avoidWrap.style.display = 'none';
+    if (eventWrap) eventWrap.style.display = 'none';
+  } else {
+    if (durNum) { durNum.disabled = false; durNum.style.opacity = '1'; }
+    if (durUnit) { durUnit.disabled = false; durUnit.style.opacity = '1'; }
+    if (durFlex) { durFlex.style.opacity = '1'; durFlex.style.pointerEvents = 'auto'; }
+    if (durNote) durNote.style.display = 'none';
+    timingTiles.forEach(function(t) { t.style.opacity = '1'; t.style.pointerEvents = 'auto'; });
+  }
+}
+
+function toggleDurFlex() {
+  var tile = document.querySelector('[data-g="durFlex"]');
+  var num = document.getElementById('durationNum'); var unit = document.getElementById('durationUnit');
+  var on = tile && tile.classList.contains('on');
+  num.disabled = on; num.style.opacity = on ? '0.4' : '1';
+  unit.disabled = on; unit.style.opacity = on ? '0.4' : '1';
+  if (on) num.value = '';
+}
+
+function togField(id) { var el = document.getElementById(id); if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+
+var kidCount = 1;
+function sanitizeKidAge(input) {
+  var val = parseInt(input.value);
+  if (isNaN(val)) { input.value = ''; return; }
+  if (val < 0) input.value = 0;
+  if (val > 17) input.value = 17;
+}
+function addKid() {
+  var c = document.getElementById('kidsContainer');
+  // Re-derive count from DOM — avoids global desync
+  kidCount = document.querySelectorAll('.kid-row').length + 1;
+  var row = document.createElement('div'); row.className = 'kid-row';
+  var label = document.createElement('label');
+  label.textContent = 'Child ' + kidCount;
+  var input = document.createElement('input');
+  input.type = 'number'; input.min = '0'; input.max = '17';
+  input.placeholder = 'Age'; input.className = 'kid-age';
+  input.addEventListener('blur', function(){ sanitizeKidAge(this); });
+  var rmBtn = document.createElement('button');
+  rmBtn.type = 'button';
+  rmBtn.className = 'btn-rm-kid';
+  rmBtn.textContent = '×';
+  rmBtn.style.display = 'flex';
+  rmBtn.onclick = function() { removeKid(this); };
+  row.appendChild(label);
+  row.appendChild(input);
+  row.appendChild(rmBtn);
+  c.appendChild(row);
+  // Show all remove buttons now there are multiple children
+  document.querySelectorAll('.btn-rm-kid').forEach(function(b){ b.style.display = 'flex'; });
+}
+function removeKid(btn) {
+  btn.closest('.kid-row').remove();
+  // Re-derive count from DOM — avoids global desync
+  var rows = document.querySelectorAll('.kid-row');
+  kidCount = rows.length;
+  rows.forEach(function(r, i){ r.querySelector('label').textContent = 'Child ' + (i + 1); });
+  // Hide remove buttons if only one child left
+  var removeBtns = document.querySelectorAll('.btn-rm-kid');
+  removeBtns.forEach(function(b){ b.style.display = kidCount <= 1 ? 'none' : 'flex'; });
+  updateBudgetPP();
+}
+
+function updateBudget(val) {
+  S.budget = parseInt(val);
+  var pct = ((val - 1000) / 29000) * 100;
+  document.getElementById('budgetSlider').style.background = 'linear-gradient(to right, var(--blue) 0%, var(--blue) ' + pct + '%, var(--border) ' + pct + '%, var(--border) 100%)';
+  var cur = document.getElementById('currencySelect') ? document.getElementById('currencySelect').value : 'AUD';
+  if (parseInt(val) >= 30000) { document.getElementById('budgetDisplay').textContent = cur + ' 30,000+'; setTimeout(function(){ openBudgetModal(); }, 300); }
+  else { document.getElementById('budgetDisplay').textContent = cur + ' ' + parseInt(val).toLocaleString(); S.budgetOver = null; }
+  updateBudgetPP();
+}
+function updateBudgetPP() {
+  var c = document.querySelector('[data-g="travelType"].on'); var t = 1;
+  if (c) { var v = c.dataset.v; if (v === 'Couple') t = 2; else if (v === 'Family' || v === 'Solo parent') t = 1 + document.querySelectorAll('.kid-age').length; else if (v === 'Group') { var gc = document.getElementById('groupCount'); var parsedCount = gc && gc.value ? parseInt(gc.value) : 2; t = isNaN(parsedCount) || parsedCount < 1 ? 2 : parsedCount; } }
+  var total = S.budgetOver ? S.budgetOver * 1000 : S.budget;
+  var cur = document.getElementById('currencySelect') ? document.getElementById('currencySelect').value : 'AUD';
+  document.getElementById('budgetPP').textContent = t > 1 ? 'Approx. ' + cur + ' ' + Math.round(total / t).toLocaleString() + ' per person' : '';
+}
+
+function openPrivacyModal() { document.getElementById('privacyModal').classList.add('on'); }
+function closePrivacyModal() { document.getElementById('privacyModal').classList.remove('on'); }
+function openBudgetModal() { document.getElementById('budgetModal').classList.add('on'); }
+function closeBudgetModal() { document.getElementById('budgetModal').classList.remove('on'); }
+function confirmBudgetOverflow() {
+  var v = document.getElementById('budgetOverflowInput').value;
+  var parsed = parseInt(v);
+  if (!isNaN(parsed) && parsed > 0) {
+    S.budgetOver = parsed;
+    var cur2 = document.getElementById('currencySelect') ? document.getElementById('currencySelect').value : 'AUD';
+    document.getElementById('budgetDisplay').textContent = cur2 + ' ' + (S.budgetOver * 1000).toLocaleString();
+  }
+  closeBudgetModal();
+  updateBudgetPP();
+}
+
+function openVisaModal() { document.getElementById('visaModal').classList.add('on'); }
+function closeVisaModal() { document.getElementById('visaModal').classList.remove('on'); }
+function confirmPassport() { S.passport = document.getElementById('passportInput').value; closeVisaModal(); }
+
+function togRank(el) {
+  var val = el.dataset.rv; var dot = el.querySelector('.rank-dot');
+  if (el.classList.contains('on')) {
+    S.ranks = S.ranks.filter(function(v){ return v !== val; }); el.classList.remove('on'); dot.textContent = ''; refreshRanks();
+  } else {
+    if (S.ranks.length >= 3) return; S.ranks.push(val); el.classList.add('on'); dot.textContent = S.ranks.length;
+  }
+}
+function refreshRanks() {
+  S.ranks = [];
+  document.querySelectorAll('.rank-item.on').forEach(function(el, i){ S.ranks.push(el.dataset.rv); el.querySelector('.rank-dot').textContent = i + 1; });
+}
+
+function capitaliseFirst(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+function getSel(g) { return Array.from(document.querySelectorAll('[data-g="' + g + '"].on')).map(function(e){ return e.dataset.v; }); }
+function getSelLower(g) { return Array.from(document.querySelectorAll('[data-g="' + g + '"].on')).map(function(e){ return e.dataset.v.toLowerCase(); }); }
+function getOne(g) { var el = document.querySelector('[data-g="' + g + '"].on'); return el ? el.dataset.v : null; }
+function getOneLower(g) { var el = document.querySelector('[data-g="' + g + '"].on'); return el ? el.dataset.v.toLowerCase() : null; }
+function getRegions() { return Array.from(document.querySelectorAll('[data-region].on')).map(function(e){ return e.dataset.region; }).filter(function(r){ return r !== 'visa_free'; }); }
+function getKidsAges() { return Array.from(document.querySelectorAll('.kid-age')).map(function(i){ return i.value; }).filter(function(v){ return v !== ''; }); }
+function getDuration() {
+  var dateType = getOne('dateType');
+  if (dateType === 'specific') {
+    var f = document.getElementById('dateFrom').value;
+    var t = document.getElementById('dateTo').value;
+    if (f && t) {
+      var parts1 = f.split('-'); var parts2 = t.split('-');
+      var d1 = new Date(parseInt(parts1[0]), parseInt(parts1[1])-1, parseInt(parts1[2]));
+      var d2 = new Date(parseInt(parts2[0]), parseInt(parts2[1])-1, parseInt(parts2[2]));
+      var nights = Math.round((d2 - d1) / (1000*60*60*24));
+      return nights > 0 ? nights + ' nights' : 'duration to be confirmed';
+    }
+    return 'duration to be confirmed';
+  }
+  var flex = document.querySelector('[data-g="durFlex"].on');
+  if (flex) return 'flexible on duration';
+  var n = document.getElementById('durationNum').value;
+  var u = document.getElementById('durationUnit').value;
+  return n ? n + ' ' + u : 'duration to be confirmed';
+}
+function getDates() {
+  var type = getOne('dateType');
+  if (type === 'specific') { var f = document.getElementById('dateFrom').value; var t = document.getElementById('dateTo').value; return f && t ? fmtDate(f) + ' to ' + fmtDate(t) : 'specific dates to be confirmed'; }
+  if (type === 'window') { var f = document.getElementById('windowFrom').value; var t = document.getElementById('windowTo').value; return f && t ? 'within the window of ' + fmtDate(f) + ' to ' + fmtDate(t) : 'a general travel window'; }
+  return 'fully flexible on dates';
+}
+function fmtDate(d) {
+  if (!d) return '';
+  // Parse as local date by splitting to avoid UTC timezone shift (Bug 3 fix)
+  var parts = d.split('-');
+  var localDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  return localDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function getTraveller() {
+  var type = getOne('travelType'); var ages = getKidsAges();
+  var ageStr = ages.length ? ' with children aged ' + ages.join(', ') : '';
+  var gc = document.getElementById('groupCount');
+  if (type === 'Solo') return 'a solo traveller';
+  if (type === 'Couple') return 'a couple';
+  if (type === 'Family') return 'a family' + ageStr;
+  if (type === 'Solo parent') return 'a solo parent' + ageStr;
+  if (type === 'Group') return 'a group of ' + (gc && gc.value ? gc.value : 'several') + ' people';
+  return 'travellers';
+}
+function getBudget() {
+  var cur = document.getElementById('currencySelect') ? document.getElementById('currencySelect').value : 'AUD';
+  var total = S.budgetOver ? (cur + ' ' + (S.budgetOver * 1000).toLocaleString()) : (S.budget >= 30000 ? cur + ' 30,000+' : cur + ' ' + S.budget.toLocaleString());
+  var style = getOneLower('budgetStyle');
+  return style ? total + ' total (' + style + ')' : total + ' total';
+}
+
+function generatePrompts() {
+  document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('on'); });
+  document.getElementById('loadingScreen').classList.add('on');
+  document.getElementById('progressWrap').classList.remove('on');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(function() {
+    try {
+      buildOutput();
+    } catch(e) {
+      console.error('buildOutput error:', e);
+      // Show error message rather than staying on loading screen
+      document.getElementById('loadingScreen').classList.remove('on');
+      document.querySelectorAll('.step')[12].classList.add('on');
+      alert('Something went wrong generating your prompts. Please try again.');
+    }
+  }, 2200);
+}
+
+function buildOutput() {
+  var traveller = getTraveller(), dates = getDates(), duration = getDuration(), budget = getBudget();
+  var budgetStyle = getOneLower('budgetStyle') || 'mid-range';
+  var dest = S.destChoice === 'have_one' ? document.getElementById('destInput').value : null;
+  var regions = getRegions().join(', ') || 'open to any region';
+  var types = getSelLower('holidayType').join(', ') || 'a mix of experiences';
+  var pace = getOneLower('pace') || 'balanced';
+  var base = getOneLower('base') || 'flexible';
+  var transport = getSelLower('transport').join(', ') || 'flights';
+  var flightStyle = getOneLower('flightStyle') || 'flexible';
+  var flightClass = getOneLower('flightClass') || 'best value';
+  var stopovers = getOneLower('stopovers') || 'one stop is fine';
+  var loyalty = document.getElementById('loyaltyPrograms').value || '';
+  var currency = document.getElementById('currencySelect') ? document.getElementById('currencySelect').value : 'AUD';
+  var touring = getOneLower('touring') || 'self-guided';
+  var accomStyles = getSelLower('accomStyle').join(', ') || 'quality hotel';
+  var accomPriorities = S.ranks.join(', then ') || 'top rated';
+  var departure = document.getElementById('departureCity').value || 'Australia';
+  var loved = document.getElementById('lovedHolidays').value || '';
+  var missed = document.getElementById('missedHolidays').value || '';
+  var extra = document.getElementById('anythingElse').value || '';
+  var mobility = document.getElementById('mobilityNotes').value || '';
+  var timingPrefs = getSel('timingPref');
+  var avoidWeather = document.getElementById('avoidWeather').value || '';
+  var localEvent = document.getElementById('localEvent').value || '';
+
+  // ── All variables defined BEFORE ctx — with defensive fallbacks ──
+  var travelType = getOne('travelType') || 'Solo';
+  var isSolo = (travelType === 'Solo');
+  var meUs = isSolo ? 'me' : 'us';
+  var myOur = isSolo ? 'my' : 'our';
+  var iWe = isSolo ? 'I' : 'we';
+  var iWeCapital = iWe.charAt(0).toUpperCase() + iWe.slice(1);
+  var flightOptSel = getOneLower('flightOpt') || '';
+  var strictlyNoFlights = flightOptSel === 'strictly no flights';
+  var showFlights = flightOptSel === 'flights to destination only' || flightOptSel === 'flights throughout';
+  var isGuided = (touring === 'private guides' || touring === 'small group tours' || touring === 'large group tours');
+  var isMultiStop = (base === 'keep moving (multi-stop itinerary)');
+
+  var destLine = dest ? 'Destination: ' + dest : 'Destination: To be determined — regions of interest: ' + regions;
+  var timingStr = timingPrefs.length ? '\nTiming preferences: ' + timingPrefs.join(', ') + (avoidWeather ? ' (avoid: ' + avoidWeather + ')' : '') + (localEvent ? ' (coincide with: ' + localEvent + ')' : '') : '';
+  var dateType = getOne('dateType');
+  var datesDisplay;
+  if (dateType === 'flexible') {
+    datesDisplay = 'Fully flexible — please recommend the best time to travel';
+  } else {
+    datesDisplay = dates;
+  }
+
+  var ctx = 'You are an elite travel concierge with unparalleled expertise in global travel. I am planning a holiday and need your expert guidance to design the ultimate travel experience.\n\n';
+  ctx += 'Travelling party: ' + capitaliseFirst(traveller) + ', departing from ' + capitaliseFirst(departure) + '\n';
+  ctx += destLine + '\n';
+  ctx += 'Travel dates: ' + datesDisplay + ', for ' + duration;
+  if (timingStr) ctx += timingStr;
+  ctx += '\nTotal budget: ' + capitaliseFirst(budget) + '\n';
+  ctx += 'Holiday type: ' + capitaliseFirst(types) + '\n';
+  ctx += 'Pace: ' + capitaliseFirst(pace) + '\n';
+  ctx += 'Base preference: ' + capitaliseFirst(base) + '\n';
+  var fullTransport = flightOptSel ? capitaliseFirst(flightOptSel) + (transport ? ', ' + capitaliseFirst(transport) : '') : capitaliseFirst(transport);
+  ctx += 'Transport preference: ' + (fullTransport || 'to be confirmed') + '\n';
+  ctx += 'Touring: ' + capitaliseFirst(touring);
+  if (loved || missed || extra || mobility || S.passport) ctx += '\n';
+  if (loved) ctx += '\nHolidays I have loved: ' + loved;
+  if (missed) ctx += '\nHolidays that have not worked: ' + missed;
+  if (extra) ctx += '\nAdditional context: ' + extra;
+  if (mobility) ctx += '\nAccessibility or mobility considerations: ' + mobility;
+  if (S.passport) ctx += '\nPassport: ' + S.passport + '. Important: only recommend destinations that require no visa or offer visa-on-arrival for this passport. Do not suggest any destination that requires advance visa application.';
+  if (strictlyNoFlights) ctx += '\nImportant travel constraint: ' + iWe + ' have selected strictly no flights. Only recommend destinations reachable entirely by land and/or sea from ' + departure + '. Do not suggest any destination that requires air travel under any circumstances.';
+
+  var prompts = [];
+
+  if (!dest) {
+    // PROMPT 1A — help me choose path
+    prompts.push({ title: 'My travel profile and destination discovery', body: ctx + '\n\nBased on everything above, recommend four destinations that would be an exceptional match for ' + meUs + ', listed in order from the one you most recommend to the least. For each destination provide:\n— Why it is a perfect fit for ' + meUs + ' specifically, taking into account everything in ' + myOur + ' travel profile above\n— The ideal time of year to visit and whether ' + myOur + ' timing aligns\n— Approximate flight time from ' + departure + '\n— The defining experiences that make it unique\n— One honest consideration or challenge to be aware of\n\nPresent ' + myOur + ' recommendations with a sophisticated, editorial tone.' });
+
+    // PROMPT 1B — destination confirmation
+    prompts.push({ title: 'Confirming ' + myOur + ' destination', body: iWeCapital + ' have chosen [type your chosen destination here] from your recommendations. Please now use this as ' + myOur + ' destination and refer back to the full travel profile ' + iWe + ' shared in Prompt 1 as the basis for everything that follows.' });
+
+  } else {
+    // PROMPT 1 — have destination path
+    prompts.push({ title: 'My travel profile and the vision', body: ctx + '\n\nBased on ' + myOur + ' travel profile above, give ' + meUs + ' a high-level overview of how you would structure this trip — the key experiences, the pacing and why this destination suits ' + meUs + ' right now. Use clear headings and a premium editorial tone throughout.' });
+  }
+
+  // PROMPT 2 — Flight strategy (if flights selected)
+  if (showFlights) {
+    prompts.push({ title: 'Flight strategy', body: 'Referring back to the travel profile ' + iWe + ' shared, design the optimal flight strategy for this trip.\n\nFlight style preference: ' + flightStyle + '\nClass preference: ' + flightClass + '\nStopovers: ' + stopovers + (loyalty ? '\nLoyalty programs to utilise: ' + loyalty : '') + '\n\nProvide:\n— Recommended flight routing with specific airline names and route options\n— Best booking strategy including when to book and which carriers to prioritise\n— Stopover recommendations if applicable — make the journey part of the experience\n— How to maximise any loyalty points or status benefits\n\nUse exact airline names only.' });
+  } else {
+    prompts.push({ title: 'Getting there', body: 'Referring back to the travel profile ' + iWe + ' shared, provide practical guidance on the best way for ' + meUs + ' to get to ' + (dest || '[chosen destination]') + ' from ' + departure + ' using ' + transport + '.\n\nCover:\n— Recommended routes and operators\n— Booking strategy including when to book\n— Journey time and what to expect\n— Any tips for travelling with ' + (traveller.includes('children') || traveller.includes('family') || traveller.includes('solo parent') ? 'children' : 'this travel party') });
+  }
+
+  // PROMPT 3 — Accommodation shortlist
+  prompts.push({ title: 'Accommodation shortlist', body: 'Referring back to the travel profile ' + iWe + ' shared in Prompt 1, curate a shortlist of three exceptional accommodation options within ' + myOur + ' overall trip budget, listed in order from the one you most recommend to the least.\n\nAccommodation style preference: ' + accomStyles + '\nPriorities in order: ' + accomPriorities + '\n\nFor each property provide:\n— Property name and precise location\n— Why it is the right fit for ' + meUs + ' specifically\n— Standout features, rooms, or suites to request\n— Dining and experiences on property\n— Any considerations or limitations\n— Current rating via Google, TripAdvisor, Booking.com, or Viator — only include properties with a rating of 4/5 or above\n\nPresent as a bespoke curation. Use exact property names only.' });
+
+  // PROMPT 4 — Itinerary or guided tours
+  if (isGuided) {
+    var multiAlt = isMultiStop ? 'As an optional alternative, also provide a self-guided day-by-day itinerary in case ' + iWe + ' would like to explore independently on any days, noting how long to spend at each location.' : 'As an optional alternative, also provide a self-guided day-by-day itinerary in case ' + iWe + ' would like to explore independently on any days.';
+    prompts.push({ title: 'Guided tours and experiences', body: 'Referring back to the travel profile ' + iWe + ' shared in Prompt 1, ' + meUs + ' have selected ' + touring + ' as ' + myOur + ' preferred touring style.\n\nPlease provide two things:\n\n1. Recommend the top-rated guided tours and experiences available for this destination that align with the holiday type and pace ' + iWe + ' gave you. Prioritise tours that are highly rated and well reviewed on Google, Viator and/or TripAdvisor. For each tour provide:\n— Operator name and tour title\n— What is included and approximate duration\n— Why it suits ' + meUs + ' specifically\n— Approximate cost\n— Advance booking guidance\n\n2. ' + multiAlt + (mobility ? '\n\nAccessibility note: ' + mobility : '') });
+  } else {
+    var multiNote = isMultiStop ? '\n— Note: ' + meUs + ' have chosen a multi-stop itinerary. Please structure the itinerary accordingly, grouping days by location and including practical transition notes between stops' : '';
+    prompts.push({ title: 'Day-by-day itinerary', body: 'Referring back to the travel profile ' + iWe + ' shared, build a complete day-by-day itinerary for this trip.\n\nKey details to factor in:\n— Holiday type: ' + types + '\n— Pace: ' + pace + '\n— Travelling as: ' + traveller + '\n— Budget: ' + budget.split('(')[0].trim() + ' with a style that is ' + budgetStyle + '\n— Touring style: ' + touring + (mobility ? '\n— Accessibility requirements: ' + mobility : '') + multiNote + '\n\nStructure each day with:\n— Morning, afternoon and evening segments\n— Specific venue, attraction and restaurant names\n— Practical notes on advance booking, best times to visit and local tips\n— Rest days and slower moments built in to reflect the pace selected\n\nBalance iconic highlights with authentic local experiences. Present using clear headings and bullet points in a sophisticated, premium tone.' });
+  }
+
+  // PROMPT 5 — Dining and experiences
+  prompts.push({ title: 'Dining and experiences', body: 'Referring back to the travel profile ' + iWe + ' shared, curate a dining and experiences guide tailored specifically to ' + meUs + ' for this trip.\n\nProvide:\n— Dining recommendations within ' + myOur + ' budget with specific restaurant names, ensuring all suggestions are appropriate for the travel party\n— Three signature experiences or activities that define this destination and are the right fit for ' + meUs + '\n— Two off-the-beaten-track discoveries most visitors miss\n— Advance booking recommendations where relevant' });
+
+  // PROMPT 6 — Logistics and practical planning
+  prompts.push({ title: 'Logistics and practical planning', body: 'Provide a practical planning guide for this trip. Present as a concise checklist rather than long paragraphs.\n\nCover:\n— Entry requirements and visa documentation for travellers departing from ' + departure + (S.passport ? ', travelling on a ' + S.passport + ' passport' : '') + '\n— Travel insurance recommendations tailored to this trip\n— Health and vaccination considerations\n— Currency, tipping culture and payment norms\n— Any other local customs or cultures ' + iWe + ' should be aware of\n— Connectivity and SIM card recommendations tailored to this destination\n— Any local laws or safety considerations relevant to this travel party\n— Getting around at the destination with specific transport options and names' + (mobility ? '\n— Accessibility considerations: ' + mobility : '') });
+
+  // PROMPT 7 — Packing guide
+  prompts.push({ title: 'Packing guide', body: 'Create a refined, practical packing guide for this trip.\n\nOrganise by category:\n— Documents and admin essentials\n— Clothing (tailored to climate, dress codes and activities)\n— Health, wellness and medical\n— Technology and connectivity tailored to the destination\n— Destination-specific items\n— What is easy to source locally versus what to bring from home\n\nRefined and practical — tailored specifically to the destination, activities and travel party.' });
+
+  // PROMPT 8 — Pre-departure checklist
+  var dateType = getOne('dateType');
+  var deptDateStr;
+  if (dateType === 'specific') {
+    var depDate = document.getElementById('dateFrom').value;
+    deptDateStr = depDate ? fmtDate(depDate) : '[type your departure date here]';
+  } else if (dateType === 'window') {
+    var winFrom = document.getElementById('windowFrom').value;
+    var winTo = document.getElementById('windowTo').value;
+    deptDateStr = (winFrom && winTo) ? 'the travel window of ' + fmtDate(winFrom) + ' to ' + fmtDate(winTo) : 'the travel window provided';
+  } else {
+    deptDateStr = 'a date to be confirmed';
+  }
+  prompts.push({ title: 'Pre-departure checklist', body: 'Referring back to the travel profile ' + iWe + ' shared, create a pre-departure checklist. Keep it concise — a checklist format, not long paragraphs.\n\nStructure as:\n— Three or more months before: major bookings, documents, visas\n— Six to eight weeks before: accommodation, experiences, insurance\n— Two to three weeks before: confirmations, packing, currency\n— One week before: final checks, downloads, notifications\n— Day before departure: final checklist\n\nStarting from ' + deptDateStr + '. Specific to departing from ' + departure + '.' });
+
+  window._prompts = prompts;
+  document.getElementById('loadingScreen').classList.remove('on');
+  document.getElementById('outputScreen').classList.add('on');
+
+  var container = document.getElementById('promptOutput'); container.innerHTML = '';
+  prompts.forEach(function(p, i) {
+    var card = document.createElement('div');
+    card.className = 'pcard';
+    card.style.animationDelay = (i * 0.07) + 's';
+
+    // Safe DOM construction — textContent for user data to prevent XSS
+    var head = document.createElement('div'); head.className = 'pcard-head';
+    var headLeft = document.createElement('div');
+    var numEl = document.createElement('div'); numEl.className = 'pcard-num';
+    numEl.textContent = 'Prompt ' + (i + 1) + ' of ' + prompts.length;
+    var titleEl = document.createElement('div'); titleEl.className = 'pcard-title';
+    titleEl.textContent = p.title;
+    headLeft.appendChild(numEl); headLeft.appendChild(titleEl);
+    var copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'btn-copy1';
+    copyBtn.textContent = 'Copy';
+    copyBtn.setAttribute('onclick', 'copySingle(this,' + i + ')');
+    head.appendChild(headLeft); head.appendChild(copyBtn);
+
+    var body = document.createElement('div');
+    body.className = 'pcard-body';
+    body.id = 'pb-' + i;
+    body.textContent = p.body;
+
+    card.appendChild(head);
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handlePrint() {
+  try {
+    window.focus();
+    window.print();
+  } catch(e) {
+    // Fallback for browsers that block window.print()
+    var printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.write('<html><head><title>Your travel prompts</title></head><body>');
+      var cards = document.querySelectorAll('.pcard-body');
+      var titles = document.querySelectorAll('.pcard-title');
+      cards.forEach(function(card, i) {
+        printWin.document.write('<h3>' + (titles[i] ? titles[i].textContent : '') + '</h3>');
+        printWin.document.write('<p style="white-space:pre-wrap;font-family:sans-serif;font-size:14px;">' + card.textContent + '</p><hr>');
+      });
+      printWin.document.write('</body></html>');
+      printWin.document.close();
+      printWin.focus();
+      printWin.print();
+    }
+  }
+}
+function copySingle(btn, i) {
+  var text = document.getElementById('pb-' + i).textContent;
+  copyToClipboard(text, btn, 'Copy');
+}
+function copyToClipboard(text, btn, resetLabel) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      if (btn) { btn.textContent = 'Copied'; btn.classList.add('copied'); setTimeout(function(){ btn.textContent = resetLabel || 'Copy'; btn.classList.remove('copied'); }, 2000); }
+    }).catch(function() { fallbackCopy(text, btn, resetLabel); });
+  } else {
+    fallbackCopy(text, btn, resetLabel);
+  }
+}
+function fallbackCopy(text, btn, resetLabel) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    if (btn) {
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent = resetLabel || 'Copy'; btn.classList.remove('copied'); }, 2000);
+    }
+  } catch (err) {
+    console.error('Fallback copy failed', err);
+  } finally {
+    document.body.removeChild(ta);
+  }
+}
+function copyAll() {
+  if (!window._prompts || !window._prompts.length) return;
+  var all = window._prompts.map(function(p, i){ return 'Prompt ' + (i + 1) + ': ' + p.title + '\n' + '─'.repeat(50) + '\n' + p.body; }).join('\n\n\n');
+  var btn = document.querySelector('.btn-copy-all');
+  copyToClipboard(all, btn, 'Copy all prompts');
+}
+function restartApp() {
+  document.getElementById('outputScreen').classList.remove('on');
+  document.getElementById('progressWrap').classList.add('on');
+  S = { step:0, total:13, flights:false, destChoice:null, budget:5000, budgetOver:null, passport:null, ranks:[] };
+  document.querySelectorAll('.tile.on').forEach(function(t){ t.classList.remove('on'); });
+  document.querySelectorAll('.rank-item.on').forEach(function(t){ t.classList.remove('on'); t.querySelector('.rank-dot').textContent = ''; });
+  document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(function(i){ i.value = ''; });
+  document.getElementById('kidsSection').style.display = 'none';
+  document.getElementById('groupSection').style.display = 'none';
+  document.getElementById('budgetSlider').value = 5000;
+  updateBudget(5000);
+  goTo(1);
+}
+
+updateBudget(5000);
+
+// ── DOMContentLoaded: event listener setup ──
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Escape key closes any open modal
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-wrap.on').forEach(function(m) {
+        m.classList.remove('on');
+      });
+    }
+  });
+
+  // Backdrop click closes modal (click on overlay not on modal content)
+  document.querySelectorAll('.modal-wrap').forEach(function(wrap) {
+    wrap.addEventListener('click', function(e) {
+      if (e.target === wrap) {
+        wrap.classList.remove('on');
+      }
+    });
+  });
+
+});
+</script>
+</body>
+</html>
