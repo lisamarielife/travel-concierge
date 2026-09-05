@@ -1,43 +1,40 @@
-const { getStore } = require("@netlify/blobs");
+import { getStore } from "@netlify/blobs";
 
 function generateRandomPin() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-exports.handler = async function (event, context) {
-  const headers = { 
+export default async (req, context) => {
+  const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
 
-  if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ message: "Method Not Allowed" }), {
+      status: 405,
       headers,
-      body: JSON.stringify({ message: "Method Not Allowed" }),
-    };
+    });
   }
 
   try {
     let body = {};
     try {
-      body = JSON.parse(event.body || "{}");
+      body = await req.json();
     } catch (parseErr) {
-      return {
-        statusCode: 400,
+      return new Response(JSON.stringify({ message: "Invalid JSON input." }), {
+        status: 400,
         headers,
-        body: JSON.stringify({ message: "Invalid JSON input." }),
-      };
+      });
     }
 
     const { email } = body;
 
     if (!email) {
-      return {
-        statusCode: 400,
+      return new Response(JSON.stringify({ message: "Email is required." }), {
+        status: 400,
         headers,
-        body: JSON.stringify({ message: "Email is required." }),
-      };
+      });
     }
 
     const cleanEmail = email.toLowerCase().trim();
@@ -52,23 +49,27 @@ exports.handler = async function (event, context) {
     }
 
     if (!isPaid) {
-      return {
-        statusCode: 403,
-        headers,
-        body: JSON.stringify({
+      return new Response(
+        JSON.stringify({
           message: "No active purchase found for this email. Please complete checkout first.",
         }),
-      };
+        {
+          status: 403,
+          headers,
+        }
+      );
     }
 
     const pin = generateRandomPin();
 
     if (!process.env.RESEND_API_KEY) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ message: "Missing RESEND_API_KEY in environment variables." }),
-      };
+      return new Response(
+        JSON.stringify({ message: "Missing RESEND_API_KEY in environment variables." }),
+        {
+          status: 500,
+          headers,
+        }
+      );
     }
 
     const response = await fetch("https://api.resend.com/emails", {
@@ -95,26 +96,32 @@ exports.handler = async function (event, context) {
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({ message: "Resend API call failed." }));
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ message: errData.message || "Failed to send email." }),
-      };
+      return new Response(
+        JSON.stringify({ message: errData.message || "Failed to send email." }),
+        {
+          status: 500,
+          headers,
+        }
+      );
     }
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
+    return new Response(
+      JSON.stringify({
         success: true,
         pin: pin,
       }),
-    };
+      {
+        status: 200,
+        headers,
+      }
+    );
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ message: err.message || "Internal server error." }),
-    };
+    return new Response(
+      JSON.stringify({ message: err.message || "Internal server error." }),
+      {
+        status: 500,
+        headers,
+      }
+    );
   }
 };
