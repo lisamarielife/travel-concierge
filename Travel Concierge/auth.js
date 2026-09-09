@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
       generatedPin = data.pin;
       emailStep.style.display = 'none';
       pinStep.style.display = 'block';
-      descText.innerText = `We sent a 6-digit PIN to ${email}. Enter it below:`;
+      descText.innerText = `We sent a 6-digit PIN to ${email}. Enter it below. Don't see it? Check your spam or junk folder and if it's not there contact lisamarieaicoach.com`;
     } catch (err) {
       showError(err.message);
       sendBtn.innerText = 'Send Access PIN';
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sessionStorage.setItem('tc_verified', 'true');
       overlay.remove();
     } else {
-      showError('Incorrect PIN. Please check your email and try again.');
+      showError('Incorrect PIN. Please check your email and try again. Still having trouble? Contact lisamarieaicoach.com');
     }
   });
 });
