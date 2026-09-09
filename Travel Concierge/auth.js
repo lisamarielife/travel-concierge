@@ -14,12 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <div id="step-email">
         <input type="email" id="user-email" class="auth-input" placeholder="your@email.com" />
-        <button id="btn-send-pin" class="auth-btn">Send Access PIN</button>
+        <button id="btn-send-pin" class="auth-btn">Send access PIN</button>
       </div>
 
       <div id="step-pin" style="display: none;">
         <input type="text" id="user-pin" class="auth-input" placeholder="6-digit PIN" maxlength="6" />
-        <button id="btn-verify-pin" class="auth-btn">Verify & Unlock</button>
+        <button id="btn-verify-pin" class="auth-btn">Verify and unlock</button>
       </div>
 
       <div id="auth-error" class="auth-error"></div>
