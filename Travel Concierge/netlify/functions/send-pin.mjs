@@ -51,7 +51,7 @@ export default async (req, context) => {
     if (!isPaid) {
       return new Response(
         JSON.stringify({
-          message: "Email not recognised. Please double-check that you're using the same email address you used at purchase checkout. Still stuck? Contact lisamarieaicoach.com",
+          message: "Email not recognised. Please double-check that you're using the same email address you used to purchase. Still stuck? Contact lisamarieaicoach.com",
         }),
         {
           status: 403,
